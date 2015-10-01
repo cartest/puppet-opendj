@@ -27,7 +27,8 @@ class opendj (
   $tmp             = hiera('opendj::tmpdir', '/tmp'),
   $master          = hiera('opendj::master', undef),
   $java_properties = hiera('opendj::java_properties', undef),
-) {
+  $manage_limits  =  hiera('opendj::manage_limits', true),
+) { include ::stdlib
   $common_opts   = "-h localhost -D '${opendj::admin_user}' -w ${opendj::admin_password}"
   $ldapsearch    = "${opendj::home}/bin/ldapsearch ${common_opts} -p ${opendj::ldap_port}"
   $ldapmodify    = "${opendj::home}/bin/ldapmodify ${common_opts} -p ${opendj::ldap_port}"
@@ -36,6 +37,7 @@ class opendj (
 # props_file Contains passwords, thus (temporarily) stored in /dev/shm
   $props_file    = '/dev/shm/opendj.properties'
   $base_dn_file  = "${tmp}/base_dn.ldif"
+  validate_bool($opendj::manage_limits)
 
   package { 'opendj':
     ensure => present,
@@ -80,17 +82,18 @@ class opendj (
     mode    => '0600',
     require => User[$user],
   }
+  if ($opendj::manage_limits) {
+    file_line { 'file_limits_soft':
+      path    => '/etc/security/limits.conf',
+      line    => "${user} soft nofile 65536",
+      require => User[$user],
+    }
 
-  file_line { 'file_limits_soft':
-    path    => '/etc/security/limits.conf',
-    line    => "${user} soft nofile 65536",
-    require => User[$user],
-  }
-
-  file_line { 'file_limits_hard':
-    path    => '/etc/security/limits.conf',
-    line    => "${user} hard nofile 131072",
-    require => User[$user],
+    file_line { 'file_limits_hard':
+      path    => '/etc/security/limits.conf',
+      line    => "${user} hard nofile 131072",
+      require => User[$user],
+    }
   }
 
   exec { 'configure opendj':
