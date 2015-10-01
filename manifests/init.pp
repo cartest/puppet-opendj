@@ -147,7 +147,7 @@ class opendj (
   if ($master != '' and $host != $master) {
     exec { 'enable replication':
       require => Service['opendj'],
-      command => "/bin/su ${user} -s /bin/bash -c \"$dsreplication enable \
+      command => "/bin/su ${user} -s /bin/bash -c \"${dsreplication} enable \
         --host1 ${master} --port1 ${admin_port} \
         --replicationPort1 ${repl_port} \
         --bindDN1 '${admin_user}' --bindPassword1 ${admin_password} \
@@ -155,13 +155,13 @@ class opendj (
         --replicationPort2 ${repl_port} \
         --bindDN2 '${admin_user}' --bindPassword2 ${admin_password} \
         --baseDN '${base_dn}'\"",
-      unless  => "/bin/su ${user} -s /bin/bash -c \"$dsreplication \
+      unless  => "/bin/su ${user} -s /bin/bash -c \"${dsreplication} \
         status | grep ${host} | cut -d : -f 5 | grep true\"",
       notify  => Exec['initialize replication']
     }
 
     exec { 'initialize replication':
-      command     => "/bin/su ${user} -s /bin/bash -c \"$dsreplication initialize \
+      command     => "/bin/su ${user} -s /bin/bash -c \"${dsreplication} initialize \
         -h ${master} -p ${admin_port} -O ${host} --baseDN ${base_dn}\"",
       require     => Exec['enable replication'],
       refreshonly => true,
@@ -172,6 +172,12 @@ class opendj (
     validate_hash($java_properties)
     create_resources('opendj::java_property', $java_properties)
 
+    #by default apply java properties does not work, slightly hacky file to
+    file {"${home}/lib/set-java-home":
+      ensure => file,
+      owner  => $opendj::user,
+      group  => $opendj::group,
+    } ->
     exec { 'apply java properties':
       command => "/bin/su ${user} -s /bin/bash -c \"${home}/bin/dsjavaproperties\"",
       notify  => Service['opendj'],
