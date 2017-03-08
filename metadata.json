@@ -1,0 +1,14 @@
+{
+  "name": "opendj",
+  "version": "0.0.3",
+  "author": "Conduct AS",
+  "summary": "OpenDJ configuration module",
+  "license": "Simplified BSD License",
+  "source": "https://github.com/cartest/puppet-opendj",
+  "project_page": "https://github.com/cartest/puppet-opendj",
+  "issues_url": "https://github.com/cartest/puppet-openam/issues",
+  "dependencies": [
+    {"name":"puppetlabs/stdlib","version_requirement":">= 4.1.0"}
+  ],
+  "data_provider": null
+}
