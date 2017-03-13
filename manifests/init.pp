@@ -96,14 +96,15 @@ class opendj (
     }
   }
 
-  exec { 'configure opendj':
-    require => File[$props_file],
-    command => "/bin/su opendj -s /bin/bash -c '${home}/setup -i \
-        -n -Q --acceptLicense --doNotStart --propertiesFilePath ${props_file}'",
-    creates => "${home}/config",
-    notify  => Exec['create RC script'],
+  if  $::packer_build_name == undef {
+    exec { 'configure opendj':
+      require => File[$props_file],
+      command => "/bin/su opendj -s /bin/bash -c '${home}/setup -i \
+          -n -Q --acceptLicense --doNotStart --propertiesFilePath ${props_file}'",
+      creates => "${home}/config",
+      notify  => Exec['create RC script'],
+    }
   }
-
   exec { 'create RC script':
     require => Package['opendj'],
     command => "${home}/bin/create-rc-script --userName ${user} \
